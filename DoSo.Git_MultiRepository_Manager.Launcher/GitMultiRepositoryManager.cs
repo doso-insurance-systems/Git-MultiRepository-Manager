@@ -1,19 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using DoSo.Git_MultiRepository_Manager.Core;
 
-namespace WindowsFormsApp1
+namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
 {
-
-
     public partial class GitMultiRepositoryManager : Form
     {
         public GitMultiRepositoryManagerCore GitRepoManager { get; }
@@ -36,6 +27,9 @@ namespace WindowsFormsApp1
             };
 
             GitRepoManager = new GitMultiRepositoryManagerCore();
+
+            GitRepoManager.CommandLogChanged += (sender, s) => { commandLogTextBox.Text = s; };
+
             GitRepoManager.GitRepositoryStatusRefreshed += (sender, statuses) =>
             {
                 dataGridView1.Invoke(new Action(() =>
@@ -50,5 +44,9 @@ namespace WindowsFormsApp1
 
 
         void CreateBranchButton_Click(object sender, EventArgs e) => GitRepoManager.CreateBranch(createBranchTextBox.Text);
+
+        void CommitButton_Click(object sender, EventArgs e) => GitRepoManager.CommitAllBranches(commitMessageTexBox.Text);
+
+        void RemotePushButton_Click(object sender, EventArgs e) => GitRepoManager.PushAllLocalBranches();
     }
 }
