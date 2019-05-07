@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using DoSo.Git_MultiRepository_Manager.Core;
@@ -13,8 +14,10 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
         {
             InitializeComponent();
 
-            foreach (var gridColumn in dataGridView1.Columns.OfType<DataGridViewColumn>())
-                gridColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.ColumnHeader;
+            //foreach (var gridColumn in dataGridView1.Columns.OfType<DataGridViewColumn>())
+            //    gridColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.ColumnHeader;
+
+            dataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
 
             dataGridView1.CellContentClick += (sender, e) =>
             {
@@ -23,12 +26,12 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
                 if (!(senderGrid.Columns[e.ColumnIndex] is DataGridViewButtonColumn) || e.RowIndex < 0) return;
 
                 var repositoryForCurrentRow = senderGrid.Rows[e.RowIndex].Cells[Repository.Name].Value.ToString();
-                GitMultiRepositoryManagerCore.OpenGitExtensions(repositoryForCurrentRow);
+                GitMultiRepositoryManagerCore.OpenGitExtensions(Path.Combine(GitRepoManager.Config.RootFolderPath, repositoryForCurrentRow));
             };
 
             GitRepoManager = new GitMultiRepositoryManagerCore();
 
-            GitRepoManager.CommandLogChanged += (sender, s) => { commandLogTextBox.Text = s; };
+            GitRepoManager.CommandLogChanged += (sender, s) => { commandLogTextBox.Text += s; };
 
             GitRepoManager.GitRepositoryStatusRefreshed += (sender, statuses) =>
             {
@@ -48,5 +51,10 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
         void CommitButton_Click(object sender, EventArgs e) => GitRepoManager.CommitAllBranches(commitMessageTexBox.Text);
 
         void RemotePushButton_Click(object sender, EventArgs e) => GitRepoManager.PushAllLocalBranches();
+
+        private void RebaseOriginMasterButton_Click(object sender, EventArgs e)
+        {
+            GitRepoManager.RebaseCurrentBranchOnOriginMaster();
+        }
     }
 }

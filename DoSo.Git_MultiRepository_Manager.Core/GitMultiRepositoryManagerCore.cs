@@ -1,5 +1,4 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,14 +12,14 @@ namespace DoSo.Git_MultiRepository_Manager.Core
 {
     public class GitMultiRepositoryManagerCore
     {
-        GitMultiRepositoryManagerConfiguration Config { get; }
-        string NewLine = Environment.NewLine;
+        public GitMultiRepositoryManagerConfiguration Config { get; }
+        readonly string _newLine = Environment.NewLine;
 
         string appendSlashesToFront(string text)
         {
-            var splitText = text.Split(new[] { NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            var splitText = text.Split(new[] { _newLine }, StringSplitOptions.RemoveEmptyEntries);
             var appendedSlashes = splitText.Select(t => $"<!-- {t} -->");
-            return string.Join(NewLine, appendedSlashes);
+            return string.Join(_newLine, appendedSlashes);
         }
 
         public GitMultiRepositoryManagerCore()
@@ -38,15 +37,15 @@ namespace DoSo.Git_MultiRepository_Manager.Core
                         (GitMultiRepositoryManagerConfiguration)configSerializer.Deserialize(configFileContent);
 
                     var _20SecondTimer = new System.Timers.Timer(10000);
-                    _20SecondTimer.Elapsed += (s, e) => _20SecondTimer_Elapsed();
+                    _20SecondTimer.Elapsed += (s, e) => timerElapsed();
 
                     _20SecondTimer.Start();
 
-                    _20SecondTimer_Elapsed();
+                    timerElapsed();
                 }
                 catch (Exception e)
                 {
-                    File.WriteAllText(serializedFilePath, $"{configFileContent} {NewLine}{NewLine}{appendSlashesToFront(e.Message)}");
+                    File.WriteAllText(serializedFilePath, $"{configFileContent} {_newLine}{_newLine}{appendSlashesToFront(e.Message)}");
                     Cli.Wrap("notepad").SetArguments(serializedFilePath).Execute();
                     throw;
                 }
@@ -57,12 +56,8 @@ namespace DoSo.Git_MultiRepository_Manager.Core
                 {
                     RepositoryFoldersList = new List<string>
                     {
-                        "solution-files",
                         "doso-core-insurance",
-                        "general-modules",
                         "doso-compiled-binaries",
-                        "tbcinsurance",
-                        "primeinsurance"
                     },
                     RootFolderPath = "---put-root-folder-path-here---",
                     GitUsername = "---put-git-username-here---",
@@ -80,21 +75,19 @@ namespace DoSo.Git_MultiRepository_Manager.Core
                 .Select(r => (repo: r, branch: r.Branches[branchName] ?? r.CreateBranch(branchName)))
                 .Select(r => Commands.Checkout(r.repo, r.branch))
                 .ToList();
+
+            timerElapsed(false);
         }
 
         public string CommandLog { get; set; } = "";
         public EventHandler<string> CommandLogChanged;
 
-        public string GetRepoNameByRepo(Repository repo) 
+        public string GetRepoNameByRepo(Repository repo)
             => repo.Info.WorkingDirectory.Split('\\')
                     .LastOrDefault(s => !string.IsNullOrEmpty(s));
 
-        public void Add2CommandLog(bool isSuccess, Repository repo, string message)
-        {
-            //CommandLog += $"|{isSuccess,}|{repo.Info.Path,-30} | {message,70}|";
-            CommandLog += $"\r\n{DateTime.Now,10:dd-MMM-yy hh:mm:ss} | {(isSuccess ? "+" : "-"),1} | {GetRepoNameByRepo(repo),-22} | {message}";
-            CommandLogChanged?.Invoke(this, CommandLog);
-        }
+        public void Add2CommandLog(bool isSuccess, Repository repo, string message) 
+            => CommandLogChanged?.Invoke(this, $"\r\n{DateTime.Now,10:dd-MMM-yy hh:mm:ss} | {(isSuccess ? "+" : "-"),1} | {GetRepoNameByRepo(repo),-22} | {message}");
 
         public void CommitAllBranches(string commitMessage)
         {
@@ -128,7 +121,7 @@ namespace DoSo.Git_MultiRepository_Manager.Core
                 });
         }
 
-        PushOptions PushOptions => new PushOptions { CredentialsProvider = Credentials,  };
+        PushOptions PushOptions => new PushOptions { CredentialsProvider = Credentials, };
 
         public void PushAllLocalBranches() => AllRepositories.ForEach(r =>
         {
@@ -137,11 +130,38 @@ namespace DoSo.Git_MultiRepository_Manager.Core
             // The local branch "buggy-3" will track a branch also named "buggy-3"
             // in the repository pointed at by "origin"
 
+            
+
             r.Branches.Update(r.Head,
                 b => b.Remote = remote.Name,
                 b => b.UpstreamBranch = r.Head.CanonicalName);
             r.Network.Push(r.Head, PushOptions);
+            Add2CommandLog(true, r, "Push successful");
         });
+
+        public void RebaseCurrentBranchOnOriginMaster()
+        {
+            AllRepositories.ForEach(r =>
+            {
+
+
+                var originMaster = r.Branches["origin/master"];
+
+
+                var head = r.Head;
+                var tracked = head.TrackedBranch;
+
+                //var sig = new Signature();
+
+                //var result = r.Rebase.Start(head, tracked, null, new Identity(sig.Name, sig.Email), new RebaseOptions());
+                try
+                {
+                    r.Rebase.Start(r.Head, originMaster, originMaster, new Identity(Config.UserDisplayName, Config.Email), new RebaseOptions());
+                    Add2CommandLog(true, r, $"Rebased {head.FriendlyName} on origin/master successful");
+                }
+                catch (Exception e){Add2CommandLog(false, r, e.Message);}
+            });
+        }
 
         List<Repository> AllRepositories
             => Config
@@ -153,9 +173,9 @@ namespace DoSo.Git_MultiRepository_Manager.Core
 
         List<(Repository Repo, GitRepositoryStatus Status)> AllRepositoresWithStatus
             => AllRepositories
-                .Select(r => 
-                    (Repo : r,
-                    Status : GitRepositoryStatuses?.SingleOrDefault(s => s.RepositoryDescription == GetRepoNameByRepo(r))))
+                .Select(r =>
+                    (Repo: r,
+                    Status: GitRepositoryStatuses?.SingleOrDefault(s => s.RepositoryDescription == GetRepoNameByRepo(r))))
                 .ToList();
 
         FetchOptions FetchOptions => new FetchOptions
@@ -168,12 +188,14 @@ namespace DoSo.Git_MultiRepository_Manager.Core
 
         IEnumerable<GitRepositoryStatus> GitRepositoryStatuses;
         public event EventHandler<IEnumerable<GitRepositoryStatus>> GitRepositoryStatusRefreshed;
-        async void _20SecondTimer_Elapsed()
+        async void timerElapsed(bool fetchRepositories = true)
         {
             var repoFoldersAbsolute = await Task.Run(() =>
                 AllRepositories
                     .Select(r =>
                     {
+                        if (!fetchRepositories) return r;
+
                         foreach (var remote in r.Network.Remotes)
                         {
                             var refSpecs = remote.FetchRefSpecs.Select(x => x.Specification);
@@ -183,6 +205,28 @@ namespace DoSo.Git_MultiRepository_Manager.Core
                     })
                     .Select(f =>
                     {
+
+                        //var head = f.Head; // this is vNext
+                        ////Console.WriteLine("Head branch: {0}, {1}", head.Name, head.Tip.Sha.Substring(0, 7));
+
+                        //foreach (var branch in f.Branches.OrderByDescending(s => s.Tip.Author.When))
+                        //{
+                        //    if (head == branch)
+                        //        continue;
+
+                        //    var commitLog = f.Commits;
+                        //    var commonAncestor = commitLog.FindCommonAncestor(head.Tip, branch.Tip);
+                        //    var ahead = commitLog.QueryBy(new CommitFilter { Since = branch.Tip, Until = commonAncestor });
+                        //    var behind = commitLog.QueryBy(new CommitFilter { Since = head.Tip, Until = commonAncestor });
+
+                        //    var Ahead = ahead.Count();
+                        //    var Behind = behind.Count();
+
+                        //    //Console.WriteLine("Branch: {0,30} {1}, Ahead: {2,2}, Behind: {3,3}", branch.Name, branch.Tip.Sha.Substring(0, 7), Ahead, Behind);
+                        //}
+
+
+
                         var master = f.Branches["master"];
 
                         var repoStatus = f.RetrieveStatus(new StatusOptions());

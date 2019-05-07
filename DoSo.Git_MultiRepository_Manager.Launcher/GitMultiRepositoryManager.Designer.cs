@@ -63,7 +63,7 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             this.OpenGitExtensions});
             this.dataGridView1.Location = new System.Drawing.Point(12, 12);
             this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.Size = new System.Drawing.Size(1808, 853);
+            this.dataGridView1.Size = new System.Drawing.Size(874, 891);
             this.dataGridView1.TabIndex = 0;
             // 
             // Repository
@@ -106,7 +106,7 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             // createBranchButton
             // 
             this.createBranchButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.createBranchButton.Location = new System.Drawing.Point(321, 895);
+            this.createBranchButton.Location = new System.Drawing.Point(321, 933);
             this.createBranchButton.Name = "createBranchButton";
             this.createBranchButton.Size = new System.Drawing.Size(189, 56);
             this.createBranchButton.TabIndex = 1;
@@ -117,7 +117,7 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             // createBranchTextBox
             // 
             this.createBranchTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.createBranchTextBox.Location = new System.Drawing.Point(12, 931);
+            this.createBranchTextBox.Location = new System.Drawing.Point(12, 969);
             this.createBranchTextBox.Name = "createBranchTextBox";
             this.createBranchTextBox.Size = new System.Drawing.Size(303, 20);
             this.createBranchTextBox.TabIndex = 2;
@@ -125,7 +125,7 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             // commitButton
             // 
             this.commitButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.commitButton.Location = new System.Drawing.Point(1070, 878);
+            this.commitButton.Location = new System.Drawing.Point(1070, 916);
             this.commitButton.Name = "commitButton";
             this.commitButton.Size = new System.Drawing.Size(189, 47);
             this.commitButton.TabIndex = 1;
@@ -136,7 +136,7 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             // commitMessageTexBox
             // 
             this.commitMessageTexBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.commitMessageTexBox.Location = new System.Drawing.Point(570, 878);
+            this.commitMessageTexBox.Location = new System.Drawing.Point(570, 916);
             this.commitMessageTexBox.Multiline = true;
             this.commitMessageTexBox.Name = "commitMessageTexBox";
             this.commitMessageTexBox.Size = new System.Drawing.Size(494, 92);
@@ -154,7 +154,7 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             // remotePushButton
             // 
             this.remotePushButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.remotePushButton.Location = new System.Drawing.Point(1070, 931);
+            this.remotePushButton.Location = new System.Drawing.Point(1070, 969);
             this.remotePushButton.Name = "remotePushButton";
             this.remotePushButton.Size = new System.Drawing.Size(189, 39);
             this.remotePushButton.TabIndex = 1;
@@ -165,29 +165,30 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             // rebaseOriginMasterButton
             // 
             this.rebaseOriginMasterButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.rebaseOriginMasterButton.Location = new System.Drawing.Point(1355, 895);
+            this.rebaseOriginMasterButton.Location = new System.Drawing.Point(1355, 933);
             this.rebaseOriginMasterButton.Name = "rebaseOriginMasterButton";
             this.rebaseOriginMasterButton.Size = new System.Drawing.Size(189, 56);
             this.rebaseOriginMasterButton.TabIndex = 1;
             this.rebaseOriginMasterButton.Text = "Rebase current branch\r\non origin/master";
             this.rebaseOriginMasterButton.UseVisualStyleBackColor = true;
+            this.rebaseOriginMasterButton.Click += new System.EventHandler(this.RebaseOriginMasterButton_Click);
             // 
             // commandLogTextBox
             // 
             this.commandLogTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.commandLogTextBox.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.commandLogTextBox.Location = new System.Drawing.Point(1827, 13);
+            this.commandLogTextBox.Location = new System.Drawing.Point(892, 13);
             this.commandLogTextBox.Multiline = true;
             this.commandLogTextBox.Name = "commandLogTextBox";
-            this.commandLogTextBox.Size = new System.Drawing.Size(507, 852);
+            this.commandLogTextBox.Size = new System.Drawing.Size(922, 890);
             this.commandLogTextBox.TabIndex = 4;
             // 
             // GitMultiRepositoryManager
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(2346, 982);
+            this.ClientSize = new System.Drawing.Size(1826, 1020);
             this.Controls.Add(this.commandLogTextBox);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.commitMessageTexBox);
