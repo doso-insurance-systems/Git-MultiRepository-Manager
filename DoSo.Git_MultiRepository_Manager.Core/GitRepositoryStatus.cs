@@ -2,19 +2,21 @@
 {
     public class GitRepositoryStatus
     {
-        public GitRepositoryStatus(string repositoryDescription, string currentBranch, string allLocalBranches, int? masterBehindOriginBy, int pendingChanges)
+        public GitRepositoryStatus(string repositoryDescription, string currentBranch, string allLocalBranches, int? headBehindOriginMasterBy, int? headAheadOriginMasterBy, int pendingChanges )
         {
             RepositoryDescription = repositoryDescription;
             CurrentBranch = currentBranch;
             AllLocalBranches = allLocalBranches;
-            MasterBehindOriginBy = masterBehindOriginBy;
+            HeadBehindOriginMasterBy = headBehindOriginMasterBy;
             PendingChanges = pendingChanges;
+            HeadAheadOriginMasterBy = headAheadOriginMasterBy;
         }
 
         public string RepositoryDescription { get; }
         public string CurrentBranch { get; }
         public string AllLocalBranches { get; }
-        public int? MasterBehindOriginBy { get; }
+        public int? HeadBehindOriginMasterBy { get; }
+        public int? HeadAheadOriginMasterBy { get; }
         public int PendingChanges { get; }
     }
 }

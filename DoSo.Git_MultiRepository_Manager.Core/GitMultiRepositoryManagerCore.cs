@@ -71,12 +71,17 @@ namespace DoSo.Git_MultiRepository_Manager.Core
 
         public void CreateBranch(string branchName)
         {
-            AllRepositories
-                .Select(r => (repo: r, branch: r.Branches[branchName] ?? r.CreateBranch(branchName)))
+            AllRepositoresWithStatus.Where(r => r.Status.PendingChanges > 0)
+                .Select(r => (repo: r.Repo, branch: r.Repo.Branches[branchName] ?? r.Repo.CreateBranch(branchName)))
                 .Select(r => Commands.Checkout(r.repo, r.branch))
                 .ToList();
 
             timerElapsed(false);
+        }
+
+        public void RemoveMergedLocalBranches()
+        {
+            //AllRepositoresWithStatus.Where(rs => rs.Status.)
         }
 
         public string CommandLog { get; set; } = "";
@@ -86,18 +91,25 @@ namespace DoSo.Git_MultiRepository_Manager.Core
             => repo.Info.WorkingDirectory.Split('\\')
                     .LastOrDefault(s => !string.IsNullOrEmpty(s));
 
-        public void Add2CommandLog(bool isSuccess, Repository repo, string message) 
+        public void Add2CommandLog(bool isSuccess, Repository repo, string message)
             => CommandLogChanged?.Invoke(this, $"\r\n{DateTime.Now,10:dd-MMM-yy hh:mm:ss} | {(isSuccess ? "+" : "-"),1} | {GetRepoNameByRepo(repo),-22} | {message}");
 
         public void CommitAllBranches(string commitMessage)
         {
             AllRepositoresWithStatus
-                .Where(r => r.Status != null).ToList()
+                .Where(r => r.Status?.PendingChanges > 0).ToList()
                 .ForEach(r =>
                 {
                     var status = r.Repo.RetrieveStatus();
-                    var filePaths = status.Modified.Select(mods => mods.FilePath).ToList();
-                    filePaths.ForEach(f => r.Repo.Index.Add(f));
+                    var modifiedFilePaths = status.Modified.Select(mods => mods.FilePath).ToList();
+                    modifiedFilePaths.ForEach(f =>
+                    {
+                        r.Repo.Index.Add(f);
+                    }
+                    );
+
+                    var untrackedFilePaths = status.Untracked.Select(f => f.FilePath).ToList();
+                    untrackedFilePaths.ForEach(f => Commands.Stage(r.Repo, f));
 
                     //r.Index.Add(filePaths);
 
@@ -121,23 +133,56 @@ namespace DoSo.Git_MultiRepository_Manager.Core
                 });
         }
 
-        PushOptions PushOptions => new PushOptions { CredentialsProvider = Credentials, };
+        const string OriginMaster = "origin/master";
+        const string Master = "master";
 
-        public void PushAllLocalBranches() => AllRepositories.ForEach(r =>
-        {
-            var remote = r.Network.Remotes["origin"];
+        public void PushLocalHeadBranchesAheadOfMaster(bool forcePush) =>
+            AllRepositories.ForEach(r =>
+            {
+                var remote = r.Network.Remotes["origin"];
 
-            // The local branch "buggy-3" will track a branch also named "buggy-3"
-            // in the repository pointed at by "origin"
+                var pushOptions = new PushOptions { CredentialsProvider = Credentials, };
 
-            
+                var originMasterBranch = r.Branches[OriginMaster];
 
-            r.Branches.Update(r.Head,
-                b => b.Remote = remote.Name,
-                b => b.UpstreamBranch = r.Head.CanonicalName);
-            r.Network.Push(r.Head, PushOptions);
-            Add2CommandLog(true, r, "Push successful");
-        });
+                var headTip = r.Head.Tip;
+                var originMasterTipSha = originMasterBranch.Tip;
+
+                var repoName = r.Info.Path;
+
+                var historyDivergence = r.ObjectDatabase.CalculateHistoryDivergence(r.Head.Tip, originMasterBranch.Tip);
+                var headAheadOfMasterBy = historyDivergence.AheadBy;
+
+                if (headAheadOfMasterBy > 0)
+                {
+                    r.Branches.Update(r.Head,
+                        b => b.Remote = remote.Name,
+                        b => b.UpstreamBranch = r.Head.CanonicalName
+                    );
+                    try
+                    {
+                        if(forcePush)
+                        {
+                            var pushRefSpec = string.Format("+{0}:{0}", r.Head.CanonicalName);
+                            r.Network.Push(remote, pushRefSpec, pushOptions);
+
+                            Add2CommandLog(true, r, "FORCE Push successful");
+                        }
+                        else
+                        {
+                            r.Network.Push(r.Head, pushOptions);
+                            Add2CommandLog(true, r, "Push successful");
+                        }
+                        
+                    }
+                    catch (Exception e) { Add2CommandLog(false, r, e.Message); }
+
+                }
+                else
+                {
+
+                }
+            });
 
         public void RebaseCurrentBranchOnOriginMaster()
         {
@@ -145,7 +190,7 @@ namespace DoSo.Git_MultiRepository_Manager.Core
             {
 
 
-                var originMaster = r.Branches["origin/master"];
+                var originMaster = r.Branches[OriginMaster];
 
 
                 var head = r.Head;
@@ -159,7 +204,7 @@ namespace DoSo.Git_MultiRepository_Manager.Core
                     r.Rebase.Start(r.Head, originMaster, originMaster, new Identity(Config.UserDisplayName, Config.Email), new RebaseOptions());
                     Add2CommandLog(true, r, $"Rebased {head.FriendlyName} on origin/master successful");
                 }
-                catch (Exception e){Add2CommandLog(false, r, e.Message);}
+                catch (Exception e) { Add2CommandLog(false, r, e.Message); }
             });
         }
 
@@ -199,46 +244,28 @@ namespace DoSo.Git_MultiRepository_Manager.Core
                         foreach (var remote in r.Network.Remotes)
                         {
                             var refSpecs = remote.FetchRefSpecs.Select(x => x.Specification);
-                            Commands.Fetch(r, remote.Name, refSpecs, FetchOptions, "logMessage");
+                            try { Commands.Fetch(r, remote.Name, refSpecs, FetchOptions, "logMessage"); }
+                            catch (Exception e) { Add2CommandLog(false, r, e.Message); }
                         }
                         return r;
                     })
                     .Select(f =>
                     {
-
-                        //var head = f.Head; // this is vNext
-                        ////Console.WriteLine("Head branch: {0}, {1}", head.Name, head.Tip.Sha.Substring(0, 7));
-
-                        //foreach (var branch in f.Branches.OrderByDescending(s => s.Tip.Author.When))
-                        //{
-                        //    if (head == branch)
-                        //        continue;
-
-                        //    var commitLog = f.Commits;
-                        //    var commonAncestor = commitLog.FindCommonAncestor(head.Tip, branch.Tip);
-                        //    var ahead = commitLog.QueryBy(new CommitFilter { Since = branch.Tip, Until = commonAncestor });
-                        //    var behind = commitLog.QueryBy(new CommitFilter { Since = head.Tip, Until = commonAncestor });
-
-                        //    var Ahead = ahead.Count();
-                        //    var Behind = behind.Count();
-
-                        //    //Console.WriteLine("Branch: {0,30} {1}, Ahead: {2,2}, Behind: {3,3}", branch.Name, branch.Tip.Sha.Substring(0, 7), Ahead, Behind);
-                        //}
-
-
-
                         var master = f.Branches["master"];
 
                         var repoStatus = f.RetrieveStatus(new StatusOptions());
+
+                        var historyDivergence = f.ObjectDatabase.CalculateHistoryDivergence(f.Head.Tip, f.Branches[OriginMaster].Tip);
+                        //var headAheadOfMasterBy = historyDivergence.AheadBy;
 
                         return new GitRepositoryStatus(
                             GetRepoNameByRepo(f),
                             f.Head.FriendlyName,
                             string.Join(";", f.Branches.OfType<Branch>().Where(b => !b.IsRemote).Select(b => b.FriendlyName)),
-                            master.TrackingDetails.BehindBy, repoStatus.Staged.Count() + repoStatus.Added.Count() + repoStatus.Modified.Count() + repoStatus.Removed.Count() + repoStatus.Untracked.Count());
+                            historyDivergence.BehindBy, historyDivergence.AheadBy, repoStatus.Staged.Count() + repoStatus.Added.Count() + repoStatus.Modified.Count() + repoStatus.Removed.Count() + repoStatus.Untracked.Count());
                     })
                     //.AsParallel()
-                    .Where(f => f.MasterBehindOriginBy > 0 || f.PendingChanges > 0)
+                    //.Where(f => f.HeadBehindOriginMasterBy > 0 || f.PendingChanges > 0)
                     //.Select(f => CliWrap.Cli.Wrap("GitExtensions").SetArguments($"browse {f.path}").Execute() )
                     .ToList());
 

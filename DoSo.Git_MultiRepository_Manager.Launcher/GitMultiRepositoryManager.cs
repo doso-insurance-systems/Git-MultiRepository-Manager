@@ -14,6 +14,8 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
         {
             InitializeComponent();
 
+            ticketSetStatusComboBox.SelectedItem = ticketSetStatusComboBox.Items[0];
+
             //foreach (var gridColumn in dataGridView1.Columns.OfType<DataGridViewColumn>())
             //    gridColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.ColumnHeader;
 
@@ -40,21 +42,30 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
                     dataGridView1.Rows.Clear();
 
                     statuses
-                        .Select(r => dataGridView1.Rows.Add(r.RepositoryDescription, r.CurrentBranch, r.AllLocalBranches, r.MasterBehindOriginBy, r.PendingChanges)).ToList();
+                        .Select(r => dataGridView1.Rows.Add(r.RepositoryDescription, r.CurrentBranch, r.AllLocalBranches, 
+                                $"+{r.HeadBehindOriginMasterBy}; -{r.HeadAheadOriginMasterBy}", r.PendingChanges)).ToList();
+
+                    createBranchComboBox.Items.Clear();
+                    createBranchComboBox
+                        .Items
+                        .AddRange(statuses.SelectMany(s => s.AllLocalBranches.Split(';'))
+                        .Distinct().OrderBy(s => s).ToArray());
                 }));
             };
         }
 
 
-        void CreateBranchButton_Click(object sender, EventArgs e) => GitRepoManager.CreateBranch(createBranchTextBox.Text);
+        void CreateBranchButton_Click(object sender, EventArgs e) => GitRepoManager.CreateBranch(createBranchComboBox.Text);
 
         void CommitButton_Click(object sender, EventArgs e) => GitRepoManager.CommitAllBranches(commitMessageTexBox.Text);
 
-        void RemotePushButton_Click(object sender, EventArgs e) => GitRepoManager.PushAllLocalBranches();
+        void RemotePushButton_Click(object sender, EventArgs e) => GitRepoManager.PushLocalHeadBranchesAheadOfMaster(forcePushCheckBox.Checked);
 
-        private void RebaseOriginMasterButton_Click(object sender, EventArgs e)
+        void RebaseOriginMasterButton_Click(object sender, EventArgs e) => GitRepoManager.RebaseCurrentBranchOnOriginMaster();
+
+        private void RemoveMergedLocalBranches_Click(object sender, EventArgs e)
         {
-            GitRepoManager.RebaseCurrentBranchOnOriginMaster();
+            GitRepoManager.RemoveMergedLocalBranches();
         }
     }
 }
