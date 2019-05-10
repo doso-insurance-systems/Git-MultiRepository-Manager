@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +11,11 @@ using YAXLib;
 
 namespace DoSo.Git_MultiRepository_Manager.Core
 {
+    public static class ExtensionMethods
+    {
+        public static bool IsAnyOf<T>(this T item, params T[] compareWith) => compareWith.Any(i => i.Equals(item));
+    }
+
     public class GitMultiRepositoryManagerCore
     {
         public GitMultiRepositoryManagerConfiguration Config { get; }
@@ -67,11 +73,23 @@ namespace DoSo.Git_MultiRepository_Manager.Core
                 Cli.Wrap("notepad").SetArguments(serializedFilePath).Execute();
             }
         }
-        public static void OpenGitExtensions(string repositoryPath) => Cli.Wrap("GitExtensions").SetArguments($"browse {repositoryPath}").Execute();
+        public static void OpenGitExtensions(string repositoryPath) => StartProcessWithArgsAndForget("GitExtensions", $"browse {repositoryPath}");
 
-        public void CreateBranch(string branchName)
+        public static void OpenVisualStudioCode(string repositoryPath) => StartProcessWithArgsAndForget("Code", repositoryPath);
+        public static void OpenWindowsExplorer(string repositoryPath) => StartProcessWithArgsAndForget("Explorer", repositoryPath);
+
+        //StartProcessWithArgsAndForget("/*Code*/")
+
+        public static void StartProcessWithArgsAndForget(string process, string args)
         {
-            AllRepositoresWithStatus.Where(r => r.Status.PendingChanges > 0)
+            var proc = Process.Start(new ProcessStartInfo { Arguments = $"/C {process} {args}", FileName = "cmd", WindowStyle = ProcessWindowStyle.Hidden });
+
+            //Cli.Wrap("explorer").SetArguments($"{repositoryPath}").Execute();
+        }
+
+        public void CreateOrCheckoutBranch(string branchName, bool force)
+        {
+            AllRepositoresWithStatus.Where(r => force || r.Status.PendingChanges > 0)
                 .Select(r => (repo: r.Repo, branch: r.Repo.Branches[branchName] ?? r.Repo.CreateBranch(branchName)))
                 .Select(r => Commands.Checkout(r.repo, r.branch))
                 .ToList();
@@ -81,7 +99,46 @@ namespace DoSo.Git_MultiRepository_Manager.Core
 
         public void RemoveMergedLocalBranches()
         {
-            //AllRepositoresWithStatus.Where(rs => rs.Status.)
+            AllRepositories
+                .ForEach(r =>
+                        {
+                            var originMaster = r.Branches[OriginMaster];
+
+                            r.Branches
+                              .Where(b => !b.IsRemote)
+                              .ToList()
+                              .ForEach(b =>
+                              {
+                                  try
+                                  {
+                                      if (r.Head.FriendlyName == b.FriendlyName) return;
+
+                                      var branchDivergence = r.ObjectDatabase.CalculateHistoryDivergence(b.Tip, originMaster.Tip);
+
+                                      var branchName = b.FriendlyName;
+                                      var tip = r.Head.FriendlyName;
+
+                                      if (branchDivergence.AheadBy == 0 && branchDivergence.BehindBy >= 0)
+                                      {
+                                          r.Branches.Remove(b);
+                                          Add2CommandLog(true, r, $"Removed branch: [{b.FriendlyName}]");
+                                      }
+                                  }
+                                  catch (Exception ex) { Add2CommandLog(false, r, $"Couldn't remove branch: [{b.FriendlyName}] due to error - {ex.Message}"); }
+                              });
+                            });
+
+
+            //    using (var repository = new Repository(path))
+            //{
+            //    var remote = repository.Network.Remotes["origin"];
+            //    var options = new PushOptions();
+            //    var credentials = options.CredentialsProvider = GetUserCredentialsProvider();
+            //    options.CredentialsProvider = credentials;
+            //    string pushRefSpec = @"refs/heads/:{0}".FormatWith(branch);
+            //    repository.Network.Push(remote, pushRefSpec);
+            //    repository.Branches.Remove(repository.Branches[branch]);
+            //}
         }
 
         public string CommandLog { get; set; } = "";
@@ -161,7 +218,7 @@ namespace DoSo.Git_MultiRepository_Manager.Core
                     );
                     try
                     {
-                        if(forcePush)
+                        if (forcePush)
                         {
                             var pushRefSpec = string.Format("+{0}:{0}", r.Head.CanonicalName);
                             r.Network.Push(remote, pushRefSpec, pushOptions);
@@ -173,7 +230,7 @@ namespace DoSo.Git_MultiRepository_Manager.Core
                             r.Network.Push(r.Head, pushOptions);
                             Add2CommandLog(true, r, "Push successful");
                         }
-                        
+
                     }
                     catch (Exception e) { Add2CommandLog(false, r, e.Message); }
 

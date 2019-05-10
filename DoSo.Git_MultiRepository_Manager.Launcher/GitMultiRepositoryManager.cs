@@ -25,10 +25,26 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             {
                 var senderGrid = (DataGridView)sender;
 
-                if (!(senderGrid.Columns[e.ColumnIndex] is DataGridViewButtonColumn) || e.RowIndex < 0) return;
+                var clickedColumn = senderGrid.Columns[e.ColumnIndex];
+                if (e.RowIndex < 0) return;
+                if (!(clickedColumn is DataGridViewButtonColumn)) return;
 
+                //var clickedColumnName = clickedColumn.Name;
                 var repositoryForCurrentRow = senderGrid.Rows[e.RowIndex].Cells[Repository.Name].Value.ToString();
-                GitMultiRepositoryManagerCore.OpenGitExtensions(Path.Combine(GitRepoManager.Config.RootFolderPath, repositoryForCurrentRow));
+
+                if (clickedColumn == OpenGitExtensions)
+                {
+                    GitMultiRepositoryManagerCore.OpenGitExtensions(Path.Combine(GitRepoManager.Config.RootFolderPath, repositoryForCurrentRow));
+                }
+                else if (clickedColumn == VSCode)
+                {
+                    GitMultiRepositoryManagerCore.OpenVisualStudioCode(Path.Combine(GitRepoManager.Config.RootFolderPath, repositoryForCurrentRow));
+                }
+                else if (clickedColumn == Explorer)
+                {
+                    GitMultiRepositoryManagerCore.OpenWindowsExplorer(Path.Combine(GitRepoManager.Config.RootFolderPath, repositoryForCurrentRow));
+                }
+
             };
 
             GitRepoManager = new GitMultiRepositoryManagerCore();
@@ -42,7 +58,7 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
                     dataGridView1.Rows.Clear();
 
                     statuses
-                        .Select(r => dataGridView1.Rows.Add(r.RepositoryDescription, r.CurrentBranch, r.AllLocalBranches, 
+                        .Select(r => dataGridView1.Rows.Add(r.RepositoryDescription, r.CurrentBranch, r.AllLocalBranches,
                                 $"+{r.HeadBehindOriginMasterBy}; -{r.HeadAheadOriginMasterBy}", r.PendingChanges)).ToList();
 
                     createBranchComboBox.Items.Clear();
@@ -55,7 +71,7 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
         }
 
 
-        void CreateBranchButton_Click(object sender, EventArgs e) => GitRepoManager.CreateBranch(createBranchComboBox.Text);
+        void CreateBranchButton_Click(object sender, EventArgs e) => GitRepoManager.CreateOrCheckoutBranch(createBranchComboBox.Text, forceCreateCheckoutCheckBox.Checked);
 
         void CommitButton_Click(object sender, EventArgs e) => GitRepoManager.CommitAllBranches(commitMessageTexBox.Text);
 

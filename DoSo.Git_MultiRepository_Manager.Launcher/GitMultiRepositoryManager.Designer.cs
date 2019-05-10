@@ -43,12 +43,15 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             this.forcePushCheckBox = new System.Windows.Forms.CheckBox();
             this.removeMergedLocalBranches = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.forceCreateCheckoutCheckBox = new System.Windows.Forms.CheckBox();
             this.Repository = new System.Windows.Forms.DataGridViewLinkColumn();
             this.CurrentBranch = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.AllBranches = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.MasterAheadAndBehindBy = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.PendingChanges = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.VSCode = new System.Windows.Forms.DataGridViewButtonColumn();
             this.OpenGitExtensions = new System.Windows.Forms.DataGridViewButtonColumn();
+            this.Explorer = new System.Windows.Forms.DataGridViewButtonColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -66,7 +69,9 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             this.AllBranches,
             this.MasterAheadAndBehindBy,
             this.PendingChanges,
-            this.OpenGitExtensions});
+            this.VSCode,
+            this.OpenGitExtensions,
+            this.Explorer});
             this.dataGridView1.Location = new System.Drawing.Point(12, 12);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.Size = new System.Drawing.Size(647, 479);
@@ -193,6 +198,7 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             // panel1
             // 
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.panel1.Controls.Add(this.forceCreateCheckoutCheckBox);
             this.panel1.Controls.Add(this.textBox1);
             this.panel1.Controls.Add(this.removeMergedLocalBranches);
             this.panel1.Controls.Add(this.createBranchButton);
@@ -208,8 +214,19 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             this.panel1.Size = new System.Drawing.Size(1222, 115);
             this.panel1.TabIndex = 9;
             // 
+            // forceCreateCheckoutCheckBox
+            // 
+            this.forceCreateCheckoutCheckBox.AutoSize = true;
+            this.forceCreateCheckoutCheckBox.Location = new System.Drawing.Point(4, 56);
+            this.forceCreateCheckoutCheckBox.Name = "forceCreateCheckoutCheckBox";
+            this.forceCreateCheckoutCheckBox.Size = new System.Drawing.Size(53, 17);
+            this.forceCreateCheckoutCheckBox.TabIndex = 9;
+            this.forceCreateCheckoutCheckBox.Text = "Force";
+            this.forceCreateCheckoutCheckBox.UseVisualStyleBackColor = true;
+            // 
             // Repository
             // 
+            this.Repository.Frozen = true;
             this.Repository.HeaderText = "Repository";
             this.Repository.Name = "Repository";
             this.Repository.ReadOnly = true;
@@ -240,12 +257,26 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             this.PendingChanges.ReadOnly = true;
             this.PendingChanges.Width = 55;
             // 
+            // VSCode
+            // 
+            this.VSCode.HeaderText = "VSCode";
+            this.VSCode.Name = "VSCode";
+            this.VSCode.ReadOnly = true;
+            this.VSCode.Width = 30;
+            // 
             // OpenGitExtensions
             // 
-            this.OpenGitExtensions.HeaderText = "Git\r\nExtensions";
+            this.OpenGitExtensions.HeaderText = "GetExt";
             this.OpenGitExtensions.Name = "OpenGitExtensions";
             this.OpenGitExtensions.ReadOnly = true;
-            this.OpenGitExtensions.Width = 65;
+            this.OpenGitExtensions.Width = 30;
+            // 
+            // Explorer
+            // 
+            this.Explorer.HeaderText = "Explorer";
+            this.Explorer.Name = "Explorer";
+            this.Explorer.ReadOnly = true;
+            this.Explorer.Width = 30;
             // 
             // GitMultiRepositoryManager
             // 
@@ -280,12 +311,15 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
         private CheckBox forcePushCheckBox;
         private Button removeMergedLocalBranches;
         private Panel panel1;
+        private CheckBox forceCreateCheckoutCheckBox;
         private DataGridViewLinkColumn Repository;
         private DataGridViewTextBoxColumn CurrentBranch;
         private DataGridViewTextBoxColumn AllBranches;
         private DataGridViewTextBoxColumn MasterAheadAndBehindBy;
         private DataGridViewTextBoxColumn PendingChanges;
+        private DataGridViewButtonColumn VSCode;
         private DataGridViewButtonColumn OpenGitExtensions;
+        private DataGridViewButtonColumn Explorer;
     }
 }
 
