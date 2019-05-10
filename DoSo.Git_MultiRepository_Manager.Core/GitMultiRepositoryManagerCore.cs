@@ -82,7 +82,7 @@ namespace DoSo.Git_MultiRepository_Manager.Core
 
         public static void StartProcessWithArgsAndForget(string process, string args)
         {
-            var proc = Process.Start(new ProcessStartInfo { Arguments = $"/C {process} {args}", FileName = "cmd", WindowStyle = ProcessWindowStyle.Hidden });
+            var proc = Process.Start(new ProcessStartInfo { Arguments = $"/C start {process} {args}", FileName = "cmd", WindowStyle = ProcessWindowStyle.Hidden });
 
             //Cli.Wrap("explorer").SetArguments($"{repositoryPath}").Execute();
         }

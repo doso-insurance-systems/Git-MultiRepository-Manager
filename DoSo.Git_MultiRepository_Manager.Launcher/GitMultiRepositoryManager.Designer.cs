@@ -37,12 +37,13 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             this.remotePushButton = new System.Windows.Forms.Button();
             this.rebaseOriginMasterButton = new System.Windows.Forms.Button();
             this.commandLogTextBox = new System.Windows.Forms.TextBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.ticketAddressTextBox = new System.Windows.Forms.TextBox();
             this.ticketSetStatusComboBox = new System.Windows.Forms.ComboBox();
             this.createBranchComboBox = new System.Windows.Forms.ComboBox();
             this.forcePushCheckBox = new System.Windows.Forms.CheckBox();
             this.removeMergedLocalBranches = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.gitLabOpenComboBox = new System.Windows.Forms.ComboBox();
             this.forceCreateCheckoutCheckBox = new System.Windows.Forms.CheckBox();
             this.Repository = new System.Windows.Forms.DataGridViewLinkColumn();
             this.CurrentBranch = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -141,20 +142,20 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             this.commandLogTextBox.Size = new System.Drawing.Size(569, 478);
             this.commandLogTextBox.TabIndex = 4;
             // 
-            // textBox1
+            // ticketAddressTextBox
             // 
-            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.textBox1.Location = new System.Drawing.Point(3, 4);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(533, 20);
-            this.textBox1.TabIndex = 2;
+            this.ticketAddressTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.ticketAddressTextBox.Location = new System.Drawing.Point(3, 4);
+            this.ticketAddressTextBox.Name = "ticketAddressTextBox";
+            this.ticketAddressTextBox.Size = new System.Drawing.Size(533, 20);
+            this.ticketAddressTextBox.TabIndex = 2;
             // 
             // ticketSetStatusComboBox
             // 
             this.ticketSetStatusComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.ticketSetStatusComboBox.FormattingEnabled = true;
             this.ticketSetStatusComboBox.Items.AddRange(new object[] {
-            "Fix / Close",
+            "Fix",
             "Touch"});
             this.ticketSetStatusComboBox.Location = new System.Drawing.Point(542, 3);
             this.ticketSetStatusComboBox.Name = "ticketSetStatusComboBox";
@@ -198,8 +199,9 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             // panel1
             // 
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.panel1.Controls.Add(this.gitLabOpenComboBox);
             this.panel1.Controls.Add(this.forceCreateCheckoutCheckBox);
-            this.panel1.Controls.Add(this.textBox1);
+            this.panel1.Controls.Add(this.ticketAddressTextBox);
             this.panel1.Controls.Add(this.removeMergedLocalBranches);
             this.panel1.Controls.Add(this.createBranchButton);
             this.panel1.Controls.Add(this.forcePushCheckBox);
@@ -213,6 +215,20 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(1222, 115);
             this.panel1.TabIndex = 9;
+            // 
+            // gitLabOpenComboBox
+            // 
+            this.gitLabOpenComboBox.FormattingEnabled = true;
+            this.gitLabOpenComboBox.Items.AddRange(new object[] {
+            "merge_requests",
+            "issues",
+            "branches"});
+            this.gitLabOpenComboBox.Location = new System.Drawing.Point(921, 30);
+            this.gitLabOpenComboBox.Name = "gitLabOpenComboBox";
+            this.gitLabOpenComboBox.Size = new System.Drawing.Size(126, 21);
+            this.gitLabOpenComboBox.TabIndex = 10;
+            this.gitLabOpenComboBox.Text = "GitLab Open:";
+            this.gitLabOpenComboBox.SelectedValueChanged += new System.EventHandler(this.GitLabOpenComboBox_SelectedValueChanged);
             // 
             // forceCreateCheckoutCheckBox
             // 
@@ -266,7 +282,7 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
             // 
             // OpenGitExtensions
             // 
-            this.OpenGitExtensions.HeaderText = "GetExt";
+            this.OpenGitExtensions.HeaderText = "GitExt";
             this.OpenGitExtensions.Name = "OpenGitExtensions";
             this.OpenGitExtensions.ReadOnly = true;
             this.OpenGitExtensions.Width = 30;
@@ -305,13 +321,14 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
         private Button remotePushButton;
         private Button rebaseOriginMasterButton;
         private TextBox commandLogTextBox;
-        private TextBox textBox1;
+        private TextBox ticketAddressTextBox;
         private ComboBox ticketSetStatusComboBox;
         private ComboBox createBranchComboBox;
         private CheckBox forcePushCheckBox;
         private Button removeMergedLocalBranches;
         private Panel panel1;
         private CheckBox forceCreateCheckoutCheckBox;
+        private ComboBox gitLabOpenComboBox;
         private DataGridViewLinkColumn Repository;
         private DataGridViewTextBoxColumn CurrentBranch;
         private DataGridViewTextBoxColumn AllBranches;
