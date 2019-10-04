@@ -24,45 +24,45 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
 
             dataGridView1.CellContentClick += (sender, e) =>
             {
-                var senderGrid = (DataGridView)sender;
+                var senderGrid = (DataGridView) sender;
 
-                var clickedColumn = senderGrid.Columns[e.ColumnIndex];
                 if (e.RowIndex < 0) return;
-                if (!(clickedColumn is DataGridViewButtonColumn)) return;
+                if (!(senderGrid.Columns[e.ColumnIndex] is DataGridViewButtonColumn clickedColumn)) return;
 
-                //var clickedColumnName = clickedColumn.Name;
                 var repositoryForCurrentRow = senderGrid.Rows[e.RowIndex].Cells[Repository.Name].Value.ToString();
 
                 if (clickedColumn == OpenGitExtensions)
-                {
-                    GitMultiRepositoryManagerCore.OpenGitExtensions(Path.Combine(GitRepoManager.Config.RootFolderPath, repositoryForCurrentRow));
-                }
+                    GitMultiRepositoryManagerCore.OpenGitExtensions(
+                        Path.Combine(GitRepoManager.Config.RootFolderPath, repositoryForCurrentRow));
                 else if (clickedColumn == VSCode)
-                {
-                    GitMultiRepositoryManagerCore.OpenVisualStudioCode(Path.Combine(GitRepoManager.Config.RootFolderPath, repositoryForCurrentRow));
-                }
+                    GitMultiRepositoryManagerCore.OpenVisualStudioCode(
+                        Path.Combine(GitRepoManager.Config.RootFolderPath, repositoryForCurrentRow));
                 else if (clickedColumn == Explorer)
-                {
-                    GitMultiRepositoryManagerCore.OpenWindowsExplorer(Path.Combine(GitRepoManager.Config.RootFolderPath, repositoryForCurrentRow));
-                }
-
+                    GitMultiRepositoryManagerCore.OpenWindowsExplorer(
+                        Path.Combine(GitRepoManager.Config.RootFolderPath, repositoryForCurrentRow));
+                else if (clickedColumn == Devenv)
+                    GitMultiRepositoryManagerCore.OpenDevenv(GitRepoManager.Config.DevenvPath,
+                        Path.Combine(GitRepoManager.Config.RootFolderPath, repositoryForCurrentRow));
             };
 
             GitRepoManager = new GitMultiRepositoryManagerCore();
 
-            GitRepoManager.CommandLogChanged += (sender, s) => commandLogTextBox.Invoke(new Action(() => commandLogTextBox.Text += s));
+            GitRepoManager.CommandLogChanged += (sender, s) =>
+                commandLogTextBox.Invoke(new Action(() => commandLogTextBox.Text += s));
 
             GitRepoManager.GitRepositoryStatusRefreshed += (sender, statuses) =>
             {
                 dataGridView1.Invoke(new Action(() =>
                 {
-                    var (rowIndex, columnIndex) = (dataGridView1.CurrentCell?.RowIndex, dataGridView1.CurrentCell?.ColumnIndex);// = dataGridView1.Rows[1].Cells[0];
+                    var (rowIndex, columnIndex) = (dataGridView1.CurrentCell?.RowIndex,
+                        dataGridView1.CurrentCell?.ColumnIndex); // = dataGridView1.Rows[1].Cells[0];
 
                     dataGridView1.Rows.Clear();
 
                     statuses
-                        .Select(r => dataGridView1.Rows.Add(r.RepositoryDescription, r.CurrentBranch, r.AllLocalBranches,
-                                $"+{r.HeadBehindOriginMasterBy}; -{r.HeadAheadOriginMasterBy}", r.PendingChanges)).ToList();
+                        .Select(r => dataGridView1.Rows.Add(r.RepositoryItem.RepositoryItemName, r.CurrentBranch,
+                            r.AllLocalBranches,
+                            $"+{r.HeadBehindOriginMasterBy}; -{r.HeadAheadOriginMasterBy}", r.PendingChanges)).ToList();
 
                     dataGridView1.CurrentCell = dataGridView1.Rows[rowIndex ?? 0].Cells[columnIndex ?? 0];
 
@@ -70,49 +70,86 @@ namespace DoSo.Git_MultiRepository_Manager.Win.Launcher
                     createBranchComboBox
                         .Items
                         .AddRange(statuses.SelectMany(s => s.AllLocalBranches.Split(';'))
-                        .Distinct().OrderBy(s => s).ToArray());
+                            .Distinct().OrderBy(s => s).ToArray());
                 }));
             };
         }
 
 
-        void CreateBranchButton_Click(object sender, EventArgs e) => GitRepoManager.CreateOrCheckoutBranch(createBranchComboBox.Text, forceCreateCheckoutCheckBox.Checked);
+        void CreateBranchButton_Click(object sender, EventArgs e) =>
+            GitRepoManager.CreateOrCheckoutBranch(createBranchComboBox.Text, forceCreateCheckoutCheckBox.Checked);
 
         void CommitButton_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(ticketAddressTextBox.Text) || string.IsNullOrWhiteSpace(commitMessageTexBox.Text))
+            if (string.IsNullOrWhiteSpace(ticketAddressTextBox.Text) ||
+                string.IsNullOrWhiteSpace(commitMessageTexBox.Text))
             {
-                MessageBox.Show("Please provide a ticket URL AND a commit message!");
+                MessageBox.Show(@"Please provide a ticket URL AND a commit message!");
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(createBranchComboBox.Text)) { GitRepoManager.CreateOrCheckoutBranch(createBranchComboBox.Text, false); }
+            if (!string.IsNullOrWhiteSpace(createBranchComboBox.Text))
+            {
+                GitRepoManager.CreateOrCheckoutBranch(createBranchComboBox.Text, forcePushCheckBox.Checked);
+            }
 
             //var gitLabClient = new GitLabClient("https://gitlab.com", GitRepoManager.Config.GitPassword);
             //var issueWithId = gitLabClient.Projects.GetAsync(o => o.IsMemberOf = true).Result;
 
-            GitRepoManager.CommitAllBranches($"{commitMessageTexBox.Text}\r\n\r\n{ticketSetStatusComboBox.Text} {ticketAddressTextBox.Text}");
+            GitRepoManager.CommitAllBranches(
+                $"{commitMessageTexBox.Text}\r\n\r\n{ticketSetStatusComboBox.Text} {ticketAddressTextBox.Text}", true);
 
             ticketAddressTextBox.Text = null;
             commitMessageTexBox.Text = null;
         }
 
-        void RemotePushButton_Click(object sender, EventArgs e) => GitRepoManager.PushLocalHeadBranchesAheadOfMaster(forcePushCheckBox.Checked);
+        void RemotePushButton_Click(object sender, EventArgs e) =>
+            GitRepoManager.PushLocalHeadBranchesAheadOfMaster(forcePushCheckBox.Checked);
 
-        void RebaseOriginMasterButton_Click(object sender, EventArgs e) => GitRepoManager.RebaseCurrentBranchOnOriginMaster();
+        void RebaseOriginMasterButton_Click(object sender, EventArgs e) =>
+            GitRepoManager.RebaseCurrentBranchOnOriginMaster();
 
-        private void RemoveMergedLocalBranches_Click(object sender, EventArgs e)
+        void RemoveMergedLocalBranches_Click(object sender, EventArgs e)
         {
             GitRepoManager.RemoveMergedLocalBranches();
         }
 
-        private void GitLabOpenComboBox_SelectedValueChanged(object sender, EventArgs e)
+        void GitLabOpenComboBox_SelectedValueChanged(object sender, EventArgs e)
         {
-            var selectedText = ((ComboBox)sender).SelectedItem;
-            var gridSelectedRowProject = dataGridView1.Rows[dataGridView1.SelectedCells[0].RowIndex].Cells[Repository.Name].Value.ToString();
+            var selectedText = ((ComboBox) sender).SelectedItem.ToString();
 
-            GitMultiRepositoryManagerCore.StartProcessWithArgsAndForget("chrome.exe", $"https://gitlab.com/doso/insurance/{gridSelectedRowProject}/{selectedText}");
+            GitLabOpenComboBox_SelectedValueChanged(selectedText);
+        }
 
+        void GitLabOpenComboBox_SelectedValueChanged(string operationType)
+        {
+            var gridSelectedRowProject = dataGridView1.Rows[dataGridView1.SelectedCells[0].RowIndex]
+                .Cells[Repository.Name].Value.ToString();
+
+            var selectedRowIndices = dataGridView1.SelectedCells.OfType<DataGridViewCell>().Select(c => c.RowIndex);
+            var selectedProjectNames =
+                dataGridView1.Rows.OfType<DataGridViewRow>()
+                    .Where(r => selectedRowIndices.Any(ri => ri == r.Index))
+                    .Select(r => r.Cells[Repository.Name].Value.ToString())
+                    .ToList();
+
+            //var allSelectedRepositoriesInGrid = dataGridView1.Rows[dataGridView1.SelectedCells[0].RowIndex].Cells[Repository.Name].Value.ToString();
+
+            foreach (var projectName in selectedProjectNames)
+            {
+                GitMultiRepositoryManagerCore.StartProcessWithArgsAndForget("chrome.exe",
+                    $"https://gitlab.com/doso/insurance/{projectName}/{operationType}");
+            }
+        }
+
+        void GitlabBranchesButton_Click(object sender, EventArgs e)
+        {
+            GitLabOpenComboBox_SelectedValueChanged("branches");
+        }
+
+        async void FetchAndPruneButton_Click(object sender, EventArgs e)
+        {
+            await GitRepoManager.RefreshRepoStatuses();
         }
     }
 }
